@@ -164,6 +164,7 @@ img {
             a {
               // @include text-frame;
               box-shadow: none;
+              user-select: none;
             }
           }
         }
@@ -334,6 +335,9 @@ img {
       z-index: 2;
       h1 {
         height: 0; /* flag: leaves height of plumber padding */
+        a {
+          user-select: none;
+        }
       }
     }
     .figdescription {
