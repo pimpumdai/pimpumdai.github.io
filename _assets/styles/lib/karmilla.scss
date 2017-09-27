@@ -1,0 +1,25 @@
+@font-face {
+  font-family: 'karmilla';
+  src:
+    url('../fonts/karmilla-bold-015-webfont.eot') format('eot'),
+    url('../fonts/karmilla-bold-015-webfont.eot?#iefix') format('embedded-opentype'),
+    url('../fonts/karmilla-bold-015-webfont.woff2') format('woff2'),
+    url('../fonts/karmilla-bold-015-webfont.woff') format('woff'),
+    url('../fonts/karmilla-bold-015-webfont.ttf') format('truetype'),
+    url('../fonts/karmilla-bold-015-webfont.svg#karmillabold') format('svg');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'karmilla';
+  src:
+    url('../fonts/karmilla-regular-015-webfont.eot') format('eot'),
+    url('../fonts/karmilla-regular-015-webfont.eot?#iefix') format('embedded-opentype'),
+    url('../fonts/karmilla-regular-015-webfont.woff2') format('woff2'),
+    url('../fonts/karmilla-regular-015-webfont.woff') format('woff'),
+    url('../fonts/karmilla-regular-015-webfont.ttf') format('truetype'),
+    url('../fonts/karmilla-regular-015-webfont.svg#karmillaregular') format('svg');
+  font-weight: 500;
+  font-style: normal;
+}

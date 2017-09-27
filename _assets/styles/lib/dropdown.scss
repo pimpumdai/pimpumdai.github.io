@@ -1,0 +1,9 @@
+.dropdown {
+	@include hardware-acceleration;
+	list-style: none;
+	overflow: visible;
+	white-space: nowrap;
+	li {
+		@include hardware-acceleration;
+	}
+}

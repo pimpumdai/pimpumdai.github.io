@@ -1,0 +1,21 @@
+@import 'lib/utility';
+@import 'lib/colors';
+
+html {
+	@include fill-fixed;
+	box-sizing: border-box;
+	body {
+    @include fill-fixed;
+		background: $c-background;
+  }
+}
+
+.static-content {
+  position: absolute;
+  @include auto-alpha(0);
+}
+
+.dynamic-content {
+	@include fill-fixed;
+  @include auto-alpha(0);
+}

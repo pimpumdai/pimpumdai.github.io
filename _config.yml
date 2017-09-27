@@ -1,0 +1,22 @@
+# Site settings
+url: "https://adrienbihorel.github.io" # the base hostname & protocol for your site
+baseurl: ""                            # the subpath of your site, e.g. /blog
+title: Adrien Bihorel
+email: adrienbihorel@gmail.com
+description: Adrien Bihorel's website
+github_username: adrienbihorel
+
+# Build settings
+markdown: kramdown
+# theme: minima
+plugins:
+  - jekyll-feed
+
+# Exclude from processing.
+exclude: ["_assets",
+          "Gemfile",
+          "Gemfile.lock",
+          "gulpfile.js",
+          "node_modules",
+          "package.json",
+          "_DS_Store"]

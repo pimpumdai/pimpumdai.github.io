@@ -1,0 +1,10 @@
+.slider {
+	// @include hardware-acceleration; /* messes up with z-index on ios */
+	cursor: pointer;
+	-webkit-tap-highlight-color: hsla(0, 0%, 0%, 0);
+	user-select: none; /* to prevent highlighting when double tapping */
+	.slide {
+		// @include hardware-acceleration; /* messes up with z-index on ios */
+		pointer-events: none; /* careful! not working in ie */
+	}
+}

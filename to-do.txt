@@ -1,0 +1,45 @@
+known issues:
+- hgrid-collapse creates an overlap of mscroll-groups that is unclickable
+- on some occurrences, clicking of of caption scrolls it to top but doesn't close it
+- the clickcheck on caption considers the article inside of it to be out of it
+- in firefox, animated gifs lead to cpu overload
+- in ie and edge the height of the menu items is 2rem instead of 1
+- in android "internet" browser mscroll struggles
+- mscroll sync of sliders manages to get off sync
+- on devices with pixel ratio > 1, caption seems to miss 1px of width
+
+to do:
+- improve media queries
+- insert text
+	> do the quick comment exercise
+
+ask for help:
+- improve/streamline mscroll-items syncing
+	> elegantly solve conflicts with clickCheck and viewportCheck
+	> improve/streamline toggler
+- improve/streamline the construction and insertion of icons
+- review javascript structure/patterns
+	> improve scopes? make more things private?
+	try to pass properties to inner functions instead of entire parent to the constructor
+
+ideas of improvements:
+- disable gifs in firefox
+- click out of the article inside of caption to close it
+- improve/streamline mscroll-loop
+	> make it work on ios: offset of a viewport length the ends of mscroll-area and the looping thresholds
+	> keep scroll velocity on scroll spawn (works with mousewheel.js)
+- make toggler take toggling time in account again
+- implement partial load / total load with tiny images
+	> change load image system for a per node system: doLoad($thisImage)
+  so i can select different groups (and filter out images with specific indexes in image groups)
+  basically make two groups: pre and post render of dynamic content
+- re-implement position: absolute + transform: translate3d on mscroll-items
+- have the html change on scroll pos / direct links for projects or posts
+- have a splash page
+- auto center mscroll-item in viewport (x and y)
+- y auto center text in parent (while sticking to the baseline)
+- re-implement isotope
+
+completed:
+- comment out some images
+- transfer projects functions and properties over to mscroll-items

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="no">
+
+	{% include head.html %}
+
+	<body>
+		<div class="static-content">
+			<header>
+				<div class="loader">
+					<p>
+						<span>
+							<span></span>
+						</span>
+					</p>
+				</div>
+				<div class="menu">
+					<ul>
+						<li><p><a data-href="/">Info</a></p></li>
+						<li><p><a data-href="/work.html">Work</a></p></li>
+					</ul>
+				</div>
+			</header>
+			<!-- <footer>
+				<div>
+					<p>Operational footer</p>
+				</div>
+			</footer> -->
+		</div>
+		<div class="dynamic-content">
+			<div class="dynamic-content-inner">
+				{{content}}
+			</div>
+		</div>
+		<div class="viewport"></div>
+		<script type="text/javascript" src="assets/js/body.js"></script>
+	</body>
+
+</html>

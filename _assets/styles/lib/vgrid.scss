@@ -1,0 +1,111 @@
+@import 'plumber';
+
+// user input
+$vgrid-use-lx: true;
+$vgrid-fill: 0.38;
+$vgrid-fill-adjust: 1;
+$vgrid-spread: 1;
+
+// constants
+$vgrid-height: 1rem;
+$vgrid-font: (
+  name: karmilla,
+  em-to-bl: 0.1667,
+  em-to-ux: 0.647,
+  em-to-lx: 0.647 * 3/4,
+  em-to-weight: 0.11,
+  em-to-ml: 0.195
+);
+
+@function vgrid-line($count) {
+  $height: $vgrid-height * $count;
+  @return $height;
+}
+
+// variables
+$vgrid-fill-reset: 1;
+@if ($vgrid-use-lx == false) {
+  $vgrid-fill-reset: 1 / map-get($vgrid-font, em-to-ux);
+} @else {
+  $vgrid-fill-reset: 1 / map-get($vgrid-font, em-to-lx);
+}
+$vgrid-void: 1 - $vgrid-fill;
+$vgrid-padding: /*vgrid-line(1) + */vgrid-line(1) * $vgrid-fill;
+$vgrid-gutter: vgrid-line(1); /* "mscroll_items_spacing" */
+
+@mixin show-vgrid($c) {
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background-image: linear-gradient(to top, transparentize($c, 0.5) 1px, transparentize($c, 0.8) 1px, transparentize($c, 0.8) vgrid-line(1) * $vgrid-fill, transparent 0);
+    background-size: 100% vgrid-line(1);
+    background-position: 0 $vgrid-padding;
+    pointer-events: none;
+    z-index: 1;
+  }
+}
+
+@include plumber-set-defaults(
+  $grid-height: vgrid-line(1),
+  $baseline: map-get($vgrid-font, em-to-bl),
+  $vgrid-font-size: $vgrid-fill-reset * $vgrid-fill-adjust * $vgrid-fill,
+  $line-height: $vgrid-spread,
+  $leading-top: 0,
+  $leading-bottom: 0,
+	$use-baseline-origin: true
+);
+
+@mixin scale-font($spread, $fill, $lt, $lb) {
+  @include plumber(
+    $line-height: $spread,
+    $font-size: $vgrid-fill-reset * $vgrid-fill-adjust * $spread * $fill,
+    $leading-top: $spread + $lt,
+    $leading-bottom: $lb
+  );
+  $min-fill-height: vgrid-line(1) * $vgrid-fill;
+  $this-fill-height: vgrid-line(1) * $fill * $spread;
+  margin-left: ($min-fill-height - $this-fill-height) * map-get($vgrid-font, em-to-ml);
+}
+
+// method 1
+// @mixin iscale-font($i) {
+//   $increment: 1;
+//   $spread: $i * $increment;
+//   $fill: ($spread + $vgrid-fill-adjust * $vgrid-fill - 1) / ($spread * $vgrid-fill-adjust);
+//   @include scale-font($spread, $fill, 0, 0);
+//   &::before, &::after {
+//     @include scale-font($spread, $fill, 0, 0);
+//   }
+// }
+
+// method 2
+@mixin iscale-font($i) {
+  // 1.61803398875
+  $factor: 1.61803398875;
+  $fill: $vgrid-fill * pow($factor, $i - 1);
+  $fill-max: vgrid-line(1) * $vgrid-fill * $factor;
+  $spread: 0;
+  @if (($fill * vgrid-line(1)) % vgrid-line(1)) > $fill-max {
+    $spread: ceil($fill) + 1;
+  } @else {
+    $spread: ceil($fill);
+  }
+  @include scale-font($spread, $fill / $spread, 0, 0);
+  &::before, &::after {
+    @include scale-font($spread, $fill / $spread, 0, 0);
+  }
+}
+
+p {
+  @include iscale-font(1);
+}
+
+@for $i from 1 through 6 {
+  h#{$i} {
+    @include iscale-font($i + 1);
+  }
+}

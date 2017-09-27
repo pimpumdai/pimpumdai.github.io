@@ -1,0 +1,64 @@
+$hgrid-count: 16;
+$hgrid-gutter: vgrid-line(1)/* * $vgrid-void + $vgrid-padding*//* * 1.61803398875*/;
+$hgrid-gutter-rounding-factor: 40; /* to prevent/counterbalance 1px inconsistencies */
+$hgrid-gutter-floored: floor($hgrid-gutter * $hgrid-gutter-rounding-factor) / $hgrid-gutter-rounding-factor;
+$hgrid-gutter-ceiled: ceil($hgrid-gutter * $hgrid-gutter-rounding-factor) / $hgrid-gutter-rounding-factor;
+@function hgrid-calc($n) {
+  @return unquote("(#{$n / $hgrid-count} * (100vw - #{$hgrid-gutter-floored}))"); /* unquote to keep parentheses */
+}
+@mixin hgrid-column($before: 0, $after: 0, $size: 1, $outer-gutter: true) {
+  display: inline-block;
+  width: calc(#{hgrid-calc($size)} - #{$hgrid-gutter-floored});
+  margin-left: calc(#{$hgrid-gutter-ceiled} + #{hgrid-calc($before)});
+  margin-right: calc(#{hgrid-calc($after)});
+  @if $outer-gutter == true {
+    &:last-of-type {
+     margin-right: calc(#{$hgrid-gutter-ceiled} + #{hgrid-calc($after)});
+    }
+  } @else {
+    &:first-of-type {
+     margin-left: calc(#{hgrid-calc($before)});
+    }
+  }
+}
+// $hgrid-col: "(100vw - #{($hgrid-count + 1) * $hgrid-gutter-floored}) / #{$hgrid-count}";
+// @function hgrid-calc($n) {
+//   @return #{$n} * unquote($hgrid-col) + #{($n - 1) * $hgrid-gutter-ceiled};
+// }
+// @mixin hgrid-column($before: 0, $after: 0, $size: 1, $outer-gutter: true) {
+//   display: inline-block;
+//   $empty-before: 0vw;
+//   $empty-after: 0vw;
+//   @if $before != 0 {
+//     $empty-before: #{$hgrid-gutter-ceiled} + #{hgrid-calc($before)};
+//   }
+//   @if $after != 0 {
+//     $empty-after: #{$hgrid-gutter-ceiled} + #{hgrid-calc($after)};
+//   }
+//   width: calc(#{hgrid-calc($size)});
+//   margin-left: calc(#{$hgrid-gutter-ceiled} + #{$empty-before});
+//   margin-right: calc(#{$empty-after});
+//   @if $outer-gutter == true {
+//     &:last-of-type {
+//      margin-right: calc(#{$hgrid-gutter-ceiled} + #{$empty-after});
+//     }
+//   } @else {
+//     &:first-of-type {
+//      margin-left: calc(#{$empty-before});
+//     }
+//   }
+// }
+@mixin show-hgrid($c) {
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background-image: linear-gradient(to right, transparent 0, transparent $hgrid-gutter, transparentize($c, 0.5) $hgrid-gutter, transparentize($c, 0.5) calc(#{$hgrid-gutter} + 1px), transparentize($c, 0.8) calc(#{$hgrid-gutter} + 1px), transparentize($c, 0.8) 100%);
+    background-size: calc(#{hgrid-calc(1)}/* + #{$hgrid-gutter}*/) 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+}
