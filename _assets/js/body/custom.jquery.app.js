@@ -15,6 +15,15 @@ var Dynamic = function() {
       self.$mscrollItems = self.$mscrollGroups.find('.mscroll-item');
       self.$imageGroups = self.$specificContent.find('.image-group');
       self.$images = self.$specificContent.find('img');
+      self.$imagesPreLoad = (function(){
+        var set = [];
+        self.$images.each(function() {
+          if ($(this).index() === 0) {
+            set.push(this);
+          }
+        });
+        return $(set);
+      })();
       self.$figures = self.$mscrollItems.find('figure');
       self.$figCaptions = self.$figures.find('figcaption a');
       self.$figDescriptions = self.$figures.find('.figdescription');
@@ -30,13 +39,24 @@ var Dynamic = function() {
         timing: self.app.timingUnit
       });
       self.$mscrollItems.each(function() {
-        var $thisFigCaption = $(this).find('figcaption a').html(function(){
+        var $thisMscrollItem = $(this);
+        $thisMscrollItem.viewportCheck({
+          $toBind: self.$mscrollContainer,
+          // $viewport: self.app.$viewport,
+          onIn: function() {
+            self.loadImages($thisMscrollItem.find('img'), 'start');
+          },
+          onOut: function() {
+            // self.loadImages($thisMscrollItem.find('img'), 'stop');
+          }
+        });
+        var $thisFigCaption = $thisMscrollItem.find('figcaption a').html(function(){
       		var text = $(this).text().split(' ');
       		var last = text.pop();
       		return text.join(' ') + ' <span>' + last + '</span>';
       	});
         var $thisFigCaptionLastWord = $thisFigCaption.find('span');
-        var $thisFigDescription = $(this).find('.figdescription');
+        var $thisFigDescription = $thisMscrollItem.find('.figdescription');
         $thisFigCaption.$icon = new Icon({timing: self.app.timingUnit}).morphTo('plus', false);
         $thisFigCaption.$icon.appendTo($thisFigCaptionLastWord); /* basically returns the element pasted, not copied */
         $thisFigCaption.makeToggler({
@@ -100,16 +120,17 @@ var Dynamic = function() {
       self.$specificContent.load(url + ' .dynamic-content-inner', function() {
         self.app.currentUrl = url;
         self.initialize();
-        self.loadImages('start', function() {
+        self.loadImages(self.$imagesPreLoad, 'start', function() {
           self.resize().render();
         });
       });
     };
-    Dynamic.prototype.loadImages = function(action, callback) {
+    Dynamic.prototype.loadImages = function($elements, action, callback) {
       var self = this;
+      var $images = $elements;
       var startLoad = function() {
         self.isLoading = true;
-        self.$images.each(function(i) {
+        $images.each(function(i) {
           var image = this;
           image.file = new Image();
           // console.log('waiting for file #' + i + ' to be loaded...');
@@ -118,22 +139,25 @@ var Dynamic = function() {
             self.imagesLoaded.push(image);
             injectFile(image);
             updatePercentLoaded();
-            self.app.static.$loader.makeLoader('update', {
-              percent: self.percentLoaded,
-              animation: true,
-              onComplete: function() {
+            // bonjour
+            // self.app.static.$loader.makeLoader('update', {
+            //   percent: self.percentLoaded,
+            //   animation: true,
+            //   onComplete: function() {
                 if (self.percentLoaded == 100) {
                   // console.log('loading complete!');
                   exitLoad({
                     onComplete: function() {
                       self.$specificContent.waitForImages(function() {
-                        callback.call();
+                        if (callback) {
+                          callback.call();
+                        }
                       });
                     }
                   });
                 }
-              }
-            });
+            //   }
+            // });
           });
           // console.log('loading file #' + i + '...');
           startFileLoad(image);
@@ -145,7 +169,7 @@ var Dynamic = function() {
       };
       var stopFileLoad = function(image) {
         // console.log('stopping load for: ' + image.file.src + '.');
-        image.file.src = '';
+        image.file.src = 'assets/img/transparent.png';
         image.file.onerror = null;
         image.file.remove();
       };
@@ -153,50 +177,57 @@ var Dynamic = function() {
         $(image).attr('src', image.file.src);
       };
       var updatePercentLoaded = function() {
-        self.percentLoaded = (self.imagesLoaded.length / self.$images.length * 100).toFixed();
+        self.percentLoaded = (self.imagesLoaded.length / $images.length * 100).toFixed();
         // console.log('loaded ' + self.percentLoaded + '%.');
       };
       var stopLoad = function() {
         // console.log('stopping to load.');
         // stop loading
-        self.$images.each(function() {
+        $images.each(function() {
           stopFileLoad(this);
         });
         // stop animation
-        TweenLite.killTweensOf(self.app.static.$loader.find('span > span'));
+        // bonjour
+        // TweenLite.killTweensOf(self.app.static.$loader.find('span > span'));
       };
       var exitLoad = function(userOptions) {
         // console.log('exiting load.');
-        self.app.static.$loader.toggleVisibility(false, self.app.timingUnit * 2, function() {
+        // bonjour
+        // self.app.static.$loader.toggleVisibility(false, self.app.timingUnit * 2, function() {
           // console.log('$loader hidden.');
           self.isLoading = false;
-          self.app.static.$loader.makeLoader('update', {
-            percent: 0,
-            animation: false
-          });
+          // self.app.static.$loader.makeLoader('update', {
+          //   percent: 0,
+          //   animation: false
+          // });
           if (typeof userOptions !== 'undefined' && userOptions.hasOwnProperty('onComplete')) {
             userOptions.onComplete.call();
           }
-        });
+        // });
       };
       if (action === 'start') {
         // console.log('starting load.');
-        // console.log('$images count: ' + self.$images.length);
-        if (self.$images.length !== 0) {
+        // console.log('$images count: ' + $images.length);
+        if ($images.length !== 0) {
           self.imagesLoaded = [];
           self.percentLoaded = 0;
-          self.app.static.$loader.toggleVisibility(true, self.app.timingUnit * 2, function() {
-            // console.log('$loader visible.');
+          // bonjour
+          // self.app.static.$loader.toggleVisibility(true, self.app.timingUnit * 2, function() {
+          //   // console.log('$loader visible.');
             startLoad();
-          });
+          // });
         } else {
-          callback.call();
+          if (callback) {
+            callback.call();
+          }
         }
       } else if (action === 'stop') {
         stopLoad();
         exitLoad({
           onComplete: function() {
-            callback.call();
+            if (callback) {
+              callback.call();
+            }
           }
         });
       }
@@ -371,7 +402,7 @@ var Static = function() {
         },
         onChange: function(element, callback) {
           if (self.app.dynamic.isLoading) {
-            self.app.dynamic.loadImages('stop', function() {
+            self.app.dynamic.loadImages(self.app.dynamic.$imagesPreLoad, 'stop', function() {
               self.app.dynamic.hideOld(callback);
             });
           } else {
@@ -479,7 +510,7 @@ var App = function() {
       self.measureWindow();
       self.resizeVgrid();
       self.static.initialize(self).resize().render();
-      self.dynamic.initialize(self).loadImages('start', function() {
+      self.dynamic.initialize(self).loadImages(self.dynamic.$imagesPreLoad, 'start', function() {
         self.dynamic.resize().render();
       });
       objectFitImages();
@@ -537,7 +568,7 @@ $.fn.viewportCheck = function(a) {
     var self = this;
     if (!self.wasInstantiated) {
       self.wasInstantiated = true;
-      ViewportChecker.prototype.doCheck = function(event) {
+      ViewportChecker.prototype.doCheck = function() {
         if ($(self.element).isInViewport({
             viewport: self.options.$viewport
           }).length) {
@@ -547,6 +578,7 @@ $.fn.viewportCheck = function(a) {
           // console.log('"' + self.element.classList[0] + '" (' + $(self.element).closest('.mscroll-group')[0].classList + ') is outside of viewport.');
           self.options.onOut();
         }
+        return self;
       };
       ViewportChecker.prototype.bind = function() {
         var self = this;
@@ -581,7 +613,7 @@ $.fn.viewportCheck = function(a) {
   };
   return self.each(function() {
     if (typeof a === 'object') {
-      this.viewportChecker = new ViewportChecker().initialize(this, a).bind();
+      this.viewportChecker = new ViewportChecker().initialize(this, a).doCheck().bind();
     } else if (typeof a === 'string') {
       if (a === 'stop') {
         this.viewportChecker.unBind();
