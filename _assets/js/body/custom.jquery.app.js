@@ -40,21 +40,21 @@ var Dynamic = function() {
       });
       self.$mscrollItems.each(function() {
         var $thisMscrollItem = $(this);
-        // var thisTaskTracker = {};
-        // $thisMscrollItem.viewportCheck({
-        //   $toBind: self.$mscrollContainer,
-        //   $viewport: self.app.$viewport,
-        //   onIn: function() {
-        //     self.loadImages($thisMscrollItem.find('img'), {
-        //       taskTracker: thisTaskTracker
-        //     }); /* flag: deal with the clones.. */
-        //   },
-        //   onOut: function() {
-        //     if (thisTaskTracker.loadingTask) {
-        //       thisTaskTracker.loadingTask.abortLoad();
-        //     }
-        //   }
-        // });
+        var thisTaskTracker = {};
+        $thisMscrollItem.viewportCheck({
+          $toBind: self.$mscrollContainer,
+          $viewport: self.app.$viewport,
+          onIn: function() {
+            self.loadImages($thisMscrollItem.find('img'), {
+              taskTracker: thisTaskTracker
+            }); /* flag: deal with the clones.. */
+          },
+          onOut: function() {
+            if (thisTaskTracker.loadingTask) {
+              thisTaskTracker.loadingTask.abortLoad();
+            }
+          }
+        });
         var $thisFigCaption = $thisMscrollItem.find('figcaption a').html(function(){
       		var text = $(this).text().split(' ');
       		var last = text.pop();
@@ -116,7 +116,7 @@ var Dynamic = function() {
       // console.log('hiding dynamic content...');
       self.$specificContent.toggleVisibility(false, self.app.timingUnit * 2, function() {
         // console.log('dynamic content hidden.');
-        callback.call();
+        callback();
       });
     };
     Dynamic.prototype.loadNew = function(url) {
@@ -127,14 +127,12 @@ var Dynamic = function() {
         self.initialize();
         self.loadImages(self.$imagesPreLoad, {
           taskTracker: self.app.PreLoadTaskTracker,
-          beforeLoadStart: function(callback) {
+          onLoadEnter: function(callback) {
             self.app.static.$loader.toggleVisibility(true, self.app.timingUnit * 2, function() {
               // console.log('$loader visible.');
+              self.isPreLoading = true;
               callback();
             });
-          },
-          onLoadStart: function() {
-            self.isPreLoading = true;
           },
           onLoadNew: function(percentLoaded, callback) {
             self.app.static.$loader.makeLoader('update', {
@@ -145,23 +143,21 @@ var Dynamic = function() {
               }
             });
           },
-          beforeLoadExit: function(callback) {
+          onLoadExit: function(callback) {
             self.app.static.$loader.toggleVisibility(false, self.app.timingUnit * 2, function() {
               // console.log('$loader hidden.');
               self.app.static.$loader.makeLoader('update', {
                 percent: 0,
                 animation: false
               });
+              self.isPreLoading = false;
+              self.resize().render();
               callback();
             });
           },
-          onLoadExit: function() {
-            self.isPreLoading = false;
-            self.resize().render();
-          },
-          onLoadAbort: function(innerCallback) {
+          onLoadAbort: function(callback) {
             TweenLite.killTweensOf(self.app.static.$loader.find('span > span'));
-            self.hideOld(innerCallback);
+            self.hideOld(callback);
           }
         });
       });
@@ -174,57 +170,65 @@ var Dynamic = function() {
           self.wasInstantiated = true;
           LoadingTask.prototype.initialize = function($elements, userOptions) {
             var self = this;
-            self.$imagesToLoad = $elements.not('.loaded');
+            self.$imagesTotal = $elements.not('.loaded');
+            self.$imagesToLoad = self.$imagesTotal;
             self.options = $.extend({
-              onLoadEnter: function() {},
-              beforeLoadStart: null,
-              onLoadStart: function() {},
-              onLoadNew: null,
-              onLoadComplete: function() {},
-              beforeLoadExit: null,
-              onLoadExit: function() {},
-              onLoadAbort: function() {}
+              onLoadEnter: function(callback) {
+                if (callback) {
+                  callback();
+                }
+              },
+              onLoadNew: function(percentLoaded, callback) {
+                if (callback) {
+                  callback();
+                }
+              },
+              onLoadComplete: function(callback) {
+                if (callback) {
+                  callback();
+                }
+              },
+              onLoadExit: function(callback) {
+                if (callback) {
+                  callback();
+                }
+              },
+              onLoadAbort: function(callback) {
+                if (callback) {
+                  callback();
+                }
+              }
             }, userOptions);
-            // console.log('entering load.');
-            // console.log('self.$imagesToLoad count: ' + self.$imagesToLoad.length);
-            if (self.$imagesToLoad.length !== 0) {
+            if (self.$imagesTotal.length !== 0) {
+              // console.log('entering load.');
+              // console.log('self.$imagesTotal count: ' + self.$imagesTotal.length);
               self.imagesLoaded = [];
               self.percentLoaded = 0;
-              if (self.options.beforeLoadStart !== null) {
-                self.options.beforeLoadStart(self.startLoad);
-              } else {
-                self.startLoad();
-              }
+              self.options.onLoadEnter(self.startLoad);
             } else {
-              self.options.onLoadExit();
+              self.exitLoad();
             }
             return self;
           };
           LoadingTask.prototype.startLoad = function() {
-            self.options.onLoadStart();
-            self.$imagesToLoad.each(function(i) {
+            self.$imagesTotal.each(function(i) {
               var image = this;
               image.file = new Image();
               // console.log('waiting for file #' + i + ' to be loaded...');
               $(image.file).on('load', function() {
-                // console.log('loaded file #' + i + '.');
+                // console.log('loaded ' + image.file.src + '.');
                 self.imagesLoaded.push(image);
                 self.injectFile(image);
                 $(image).addClass('loaded');
-                self.updatePercentLoaded();
-                var checkProgress = function() {
+                self.updateLoaded();
+                self.options.onLoadNew(self.percentLoaded, function() {
                   if (self.percentLoaded == 100) {
                     // console.log('loading complete!');
                     self.exitLoad();
                   }
-                };
-                if (self.options.onLoadNew !== null) {
-                  self.options.onLoadNew(self.percentLoaded, checkProgress);
-                } else {
-                  checkProgress();
-                }
+                });
               });
-              // console.log('loading file #' + i + '...');
+              // console.log('loading ' + image.file.src + '...');
               self.startFileLoad(image);
             });
             return self;
@@ -236,7 +240,7 @@ var Dynamic = function() {
           };
           LoadingTask.prototype.abortFileLoad = function(image) {
             // console.log('stopping load for: ' + image.file.src + '.');
-            image.file.src = $(image).attr('src');
+            image.file.src = '';
             image.file.onerror = null;
             image.file.remove();
             return self;
@@ -245,32 +249,32 @@ var Dynamic = function() {
             $(image).attr('src', image.file.src);
             return self;
           };
-          LoadingTask.prototype.updatePercentLoaded = function() {
-            self.percentLoaded = (self.imagesLoaded.length / self.$imagesToLoad.length * 100).toFixed();
+          LoadingTask.prototype.updateLoaded = function() {
+            self.percentLoaded = (self.imagesLoaded.length / self.$imagesTotal.length * 100).toFixed();
+            self.$imagesToLoad = self.$imagesTotal.not('.loaded');
             // console.log('loaded ' + self.percentLoaded + '%.');
             return self;
           };
           LoadingTask.prototype.abortLoad = function(callback) {
-            console.log('aborting load.');
-            self.$imagesToLoad.each(function() {
-              self.abortFileLoad(this);
-            });
+            console.log(self.$imagesToLoad.length);
+            if (self.$imagesToLoad.length > 0) {
+              console.log('aborting load.');
+              self.$imagesToLoad.each(function() {
+                self.abortFileLoad(this);
+              });
+            }
             self.options.onLoadAbort(callback);
             return self;
           };
-          LoadingTask.prototype.exitLoad = function(userOptions) {
+          LoadingTask.prototype.exitLoad = function() {
             // console.log('exiting load.');
-            var doExit = function() {
-              self.options.onLoadExit();
-            };
-            if (self.options.beforeLoadExit !== null) {
-              self.options.beforeLoadExit(doExit);
-            } else {
-              doExit();
-            }
+            self.options.onLoadExit(function() {
+              // console.log('load has exited.');
+            });
             return self;
           };
         }
+        return self;
       };
       if (!a || typeof a === 'object') {
         if (a.taskTracker) {
@@ -450,11 +454,11 @@ var Static = function() {
           return $listItem.find('p').height();
           // return parseFloat($listItem.find('p').css('line-height')) + parseFloat($listItem.find('p').css('padding-top')) + parseFloat($listItem.find('p').css('padding-bottom'));
         },
-        onChange: function($element, innerCallback) {
+        onChange: function($element, callback) {
           if (self.app.dynamic.isPreLoading) {
-            self.app.PreLoadTaskTracker.loadingTask.abortLoad(innerCallback);
+            self.app.PreLoadTaskTracker.loadingTask.abortLoad(callback);
           } else {
-            self.app.dynamic.hideOld(innerCallback);
+            self.app.dynamic.hideOld(callback);
           }
           if (Modernizr.history) {
             history.pushState(null, null, $element.attr('data-href'));
@@ -498,7 +502,7 @@ var App = function() {
     App.prototype.docReady = false;
     App.prototype.winLoaded = false;
     App.prototype.isIos = false;
-    App.prototype.timingUnit = 0.15;
+    App.prototype.timingUnit = 0.5;
     App.prototype.windowRef = {
       minHeight: 320,
       maxHeight: 900,
@@ -561,14 +565,12 @@ var App = function() {
       self.PreLoadTaskTracker = {};
       self.dynamic.initialize(self).loadImages(self.dynamic.$imagesPreLoad, {
         taskTracker: self.PreLoadTaskTracker,
-        beforeLoadStart: function(callback) {
+        onLoadEnter: function(callback) {
           self.static.$loader.toggleVisibility(true, self.timingUnit * 2, function() { /* "before starting" */
             // console.log('$loader visible.');
+            self.dynamic.isPreLoading = true;
             callback();
           });
-        },
-        onLoadStart: function() {
-          self.dynamic.isPreLoading = true;
         },
         onLoadNew: function(percentLoaded, callback) {
           self.static.$loader.makeLoader('update', {
@@ -579,30 +581,23 @@ var App = function() {
             }
           });
         },
-        beforeLoadExit: function(callback) {
+        onLoadExit: function(callback) {
           self.static.$loader.toggleVisibility(false, self.timingUnit * 2, function() {
             // console.log('$loader hidden.');
             self.static.$loader.makeLoader('update', {
               percent: 0,
               animation: false
             });
+            self.dynamic.isPreLoading = false;
+            self.dynamic.resize().render();
             callback();
           });
         },
-        onLoadExit: function() {
-          self.dynamic.isPreLoading = false;
-          self.dynamic.resize().render();
-        },
-        onLoadAbort: function(innerCallback) {
+        onLoadAbort: function(callback) {
           TweenLite.killTweensOf(self.static.$loader.find('span > span'));
-          self.dynamic.hideOld(innerCallback);
+          self.dynamic.hideOld(callback);
         }
       });
-      // setTimeout(function(innerCallback){
-      //   self.PreLoadTaskTracker.loadingTask.abortLoad(function() {
-      //     self.toggle();
-      //   });
-      // }, 100);
       objectFitImages();
     };
     App.prototype.resize = function() {
@@ -826,7 +821,7 @@ $.fn.makeLoader = function(a, b) {
             onComplete: function() {
               // console.log('$loader set to ' + options.percent + '%.');
               if (options.onComplete) {
-                options.onComplete.call();
+                options.onComplete();
               }
             }
           });
@@ -960,7 +955,7 @@ $.fn.makeDropdown = function(a) {
             }
             afterLast = function() {
               if (callback) {
-                callback.call();
+                callback();
               }
             };
           }
