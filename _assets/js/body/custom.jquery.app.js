@@ -40,21 +40,21 @@ var Dynamic = function() {
       });
       self.$mscrollItems.each(function() {
         var $thisMscrollItem = $(this);
-        var thisTaskTracker = {};
-        $thisMscrollItem.viewportCheck({
-          $toBind: self.$mscrollContainer,
-          $viewport: self.app.$viewport,
-          onIn: function() {
-            self.loadImages($thisMscrollItem.find('img'), {
-              taskTracker: thisTaskTracker
-            }); /* flag: deal with the clones.. */
-          },
-          onOut: function() {
-            if (thisTaskTracker.loadingTask) {
-              thisTaskTracker.loadingTask.abortLoad();
-            }
-          }
-        });
+        // var thisTaskTracker = {};
+        // $thisMscrollItem.viewportCheck({
+        //   $toBind: self.$mscrollContainer,
+        //   $viewport: self.app.$viewport,
+        //   onIn: function() {
+        //     self.loadImages($thisMscrollItem.find('img'), {
+        //       taskTracker: thisTaskTracker
+        //     }); /* flag: deal with the clones.. */
+        //   },
+        //   onOut: function() {
+        //     if (thisTaskTracker.loadingTask) {
+        //       thisTaskTracker.loadingTask.abortLoad();
+        //     }
+        //   }
+        // });
         var $thisFigCaption = $thisMscrollItem.find('figcaption a').html(function(){
       		var text = $(this).text().split(' ');
       		var last = text.pop();
@@ -159,9 +159,9 @@ var Dynamic = function() {
             self.isPreLoading = false;
             self.resize().render();
           },
-          onLoadAbort: function(callback) {
+          onLoadAbort: function(innerCallback) {
             TweenLite.killTweensOf(self.app.static.$loader.find('span > span'));
-            self.app.dynamic.hideOld(callback);
+            self.hideOld(innerCallback);
           }
         });
       });
@@ -450,11 +450,11 @@ var Static = function() {
           return $listItem.find('p').height();
           // return parseFloat($listItem.find('p').css('line-height')) + parseFloat($listItem.find('p').css('padding-top')) + parseFloat($listItem.find('p').css('padding-bottom'));
         },
-        onChange: function(element, callback) {
+        onChange: function($element, innerCallback) {
           if (self.app.dynamic.isPreLoading) {
-            self.app.PreLoadTaskTracker.loadingTask.abortLoad(callback);
+            self.app.PreLoadTaskTracker.loadingTask.abortLoad(innerCallback);
           } else {
-            self.app.dynamic.hideOld(callback);
+            self.app.dynamic.hideOld(innerCallback);
           }
           if (Modernizr.history) {
             history.pushState(null, null, $(element).attr('data-href'));
@@ -593,11 +593,16 @@ var App = function() {
           self.dynamic.isPreLoading = false;
           self.dynamic.resize().render();
         },
-        onLoadAbort: function(callback) {
-          TweenLite.killTweensOf(self.app.static.$loader.find('span > span'));
-          self.app.dynamic.hideOld(callback);
+        onLoadAbort: function(innerCallback) {
+          TweenLite.killTweensOf(self.static.$loader.find('span > span'));
+          self.dynamic.hideOld(innerCallback);
         }
       });
+      // setTimeout(function(innerCallback){
+      //   self.PreLoadTaskTracker.loadingTask.abortLoad(function() {
+      //     self.toggle();
+      //   });
+      // }, 100);
       objectFitImages();
     };
     App.prototype.resize = function() {
