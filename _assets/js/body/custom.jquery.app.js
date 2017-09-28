@@ -457,7 +457,7 @@ var Static = function() {
             self.app.dynamic.hideOld(innerCallback);
           }
           if (Modernizr.history) {
-            history.pushState(null, null, $(element).attr('data-href'));
+            history.pushState(null, null, $element.attr('data-href'));
           }
         },
         afterChange: function(element) {
