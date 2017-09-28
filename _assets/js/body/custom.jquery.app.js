@@ -17,11 +17,16 @@ var Dynamic = function() {
       self.$images = self.$specificContent.find('img');
       self.$imagesPreLoad = (function(){
         var set = [];
-        self.$images.each(function() {
+        self.$images.filter('.critical').each(function() {
           if ($(this).index() === 0) {
             set.push(this);
           }
         });
+        // self.$images.each(function() {
+        //   if ($(this).index() === 0) {
+        //     set.push(this);
+        //   }
+        // });
         return $(set);
       })();
       self.$figures = self.$mscrollItems.find('figure');
@@ -38,6 +43,7 @@ var Dynamic = function() {
       self.$imageGroups.makeSlider({
         timing: self.app.timingUnit
       });
+      console.log('starting viewport load');
       self.$mscrollItems.viewportCheck({
         $toBind: self.$mscrollContainer,
         $viewport: self.app.$viewport,
@@ -117,6 +123,7 @@ var Dynamic = function() {
       self.$specificContent.load(url + ' .dynamic-content-inner', function() {
         self.app.currentUrl = url;
         self.initialize();
+        console.log('starting preload');
         self.loadImages(self.$imagesPreLoad, {
           taskTracker: self.app.PreLoadTaskTracker,
           onLoadEnter: function(callback) {
@@ -553,6 +560,7 @@ var App = function() {
       self.resizeVgrid();
       self.static.initialize(self).resize().render();
       self.PreLoadTaskTracker = {};
+      console.log('starting preload');
       self.dynamic.initialize(self).loadImages(self.dynamic.$imagesPreLoad, {
         taskTracker: self.PreLoadTaskTracker,
         onLoadEnter: function(callback) {
