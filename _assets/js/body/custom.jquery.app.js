@@ -44,10 +44,7 @@ var Dynamic = function() {
           $toBind: self.$mscrollContainer,
           // $viewport: self.app.$viewport,
           onIn: function() {
-            self.loadImages($thisMscrollItem.find('img'), 'start');
-          },
-          onOut: function() {
-            // self.loadImages($thisMscrollItem.find('img'), 'stop');
+            self.loadImages($thisMscrollItem.find('img')); /* flag: deal with the clones.. + stop on out */
           }
         });
         var $thisFigCaption = $thisMscrollItem.find('figcaption a').html(function(){
@@ -120,117 +117,291 @@ var Dynamic = function() {
       self.$specificContent.load(url + ' .dynamic-content-inner', function() {
         self.app.currentUrl = url;
         self.initialize();
-        self.loadImages(self.$imagesPreLoad, 'start', function() {
-          self.resize().render();
+        self.loadImages(self.$imagesPreLoad, {
+          beforeLoadStart: function(callback) {
+            self.app.static.$loader.toggleVisibility(true, self.app.timingUnit * 2, function() { /* "before starting" */
+              console.log('$loader visible.');
+              callback();
+            });
+          },
+          onLoadStart: function() {
+            self.isPreLoading = true;
+          },
+          onLoadNew: function(percentLoaded, callback) {
+            self.app.static.$loader.makeLoader('update', {
+              percent: percentLoaded, /*self.percentLoaded, where do i get it?! */
+              animation: true,
+              onComplete: function() {
+                callback();
+              }
+            });
+          },
+          beforeLoadExit: function(callback) {
+            self.app.static.$loader.toggleVisibility(false, self.app.timingUnit * 2, function() {
+              console.log('$loader hidden.');
+              self.app.static.$loader.makeLoader('update', {
+                percent: 0,
+                animation: false
+              });
+              callback();
+            });
+          },
+          onLoadExit: function() {
+            self.isPreLoading = false;
+            self.resize().render();
+          },
+          // onLoadAbort: function() {
+          //   self.app.dynamic.hideOld(callback);
+          // } /* not operational */
         });
       });
     };
-    Dynamic.prototype.loadImages = function($elements, action, callback) {
+    Dynamic.prototype.loadImages = function($elements, a) {
       var self = this;
-      var $images = $elements;
-      var startLoad = function() {
-        self.isLoading = true;
-        $images.each(function(i) {
-          var image = this;
-          image.file = new Image();
-          // console.log('waiting for file #' + i + ' to be loaded...');
-          $(image.file).on('load', function() {
-            // console.log('loaded file #' + i + '.');
-            self.imagesLoaded.push(image);
-            injectFile(image);
-            updatePercentLoaded();
-            // bonjour
-            // self.app.static.$loader.makeLoader('update', {
-            //   percent: self.percentLoaded,
-            //   animation: true,
-            //   onComplete: function() {
-                if (self.percentLoaded == 100) {
-                  // console.log('loading complete!');
-                  exitLoad({
-                    onComplete: function() {
-                      self.$specificContent.waitForImages(function() {
-                        if (callback) {
-                          callback.call();
-                        }
-                      });
-                    }
-                  });
-                }
-            //   }
-            // });
-          });
-          // console.log('loading file #' + i + '...');
-          startFileLoad(image);
-        });
-      };
-      var startFileLoad = function(image) {
-        // console.log('starting load for: ' + image.file.src + '...');
-        image.file.src = $(image).attr('data-src');
-      };
-      var stopFileLoad = function(image) {
-        // console.log('stopping load for: ' + image.file.src + '.');
-        image.file.src = 'assets/img/transparent.png';
-        image.file.onerror = null;
-        image.file.remove();
-      };
-      var injectFile = function(image) {
-        $(image).attr('src', image.file.src);
-      };
-      var updatePercentLoaded = function() {
-        self.percentLoaded = (self.imagesLoaded.length / $images.length * 100).toFixed();
-        // console.log('loaded ' + self.percentLoaded + '%.');
-      };
-      var stopLoad = function() {
-        // console.log('stopping to load.');
-        // stop loading
-        $images.each(function() {
-          stopFileLoad(this);
-        });
-        // stop animation
-        // bonjour
-        // TweenLite.killTweensOf(self.app.static.$loader.find('span > span'));
-      };
-      var exitLoad = function(userOptions) {
-        // console.log('exiting load.');
-        // bonjour
-        // self.app.static.$loader.toggleVisibility(false, self.app.timingUnit * 2, function() {
-          // console.log('$loader hidden.');
-          self.isLoading = false;
-          // self.app.static.$loader.makeLoader('update', {
-          //   percent: 0,
-          //   animation: false
-          // });
-          if (typeof userOptions !== 'undefined' && userOptions.hasOwnProperty('onComplete')) {
-            userOptions.onComplete.call();
-          }
-        // });
-      };
-      if (action === 'start') {
-        // console.log('starting load.');
-        // console.log('$images count: ' + $images.length);
-        if ($images.length !== 0) {
-          self.imagesLoaded = [];
-          self.percentLoaded = 0;
-          // bonjour
-          // self.app.static.$loader.toggleVisibility(true, self.app.timingUnit * 2, function() {
-          //   // console.log('$loader visible.');
-            startLoad();
-          // });
-        } else {
-          if (callback) {
-            callback.call();
-          }
-        }
-      } else if (action === 'stop') {
-        stopLoad();
-        exitLoad({
-          onComplete: function() {
-            if (callback) {
-              callback.call();
+      var LoadingTask = function() {
+        var self = this;
+        if (!self.wasInstantiated) {
+          self.wasInstantiated = true;
+          LoadingTask.prototype.initialize = function($elements, userOptions) {
+            var self = this;
+            self.$imagesToLoad = $elements.not('.loaded');
+            self.options = $.extend({
+              // withLoader: false,
+              onLoadEnter: function() {},
+              beforeLoadStart: null,
+              onLoadStart: function() {},
+              onLoadNew: null,
+              onLoadComplete: function() {},
+              beforeLoadExit: null,
+              onLoadExit: function() {},
+              // onLoadAbort: function() {}
+            }, userOptions);
+            console.log('entering load.');
+            console.log('self.$imagesToLoad count: ' + self.$imagesToLoad.length);
+            if (self.$imagesToLoad.length !== 0) {
+              self.imagesLoaded = [];
+              self.percentLoaded = 0;
+              if (self.options.beforeLoadStart !== null) {
+                self.options.beforeLoadStart(self.startLoad);
+              } else {
+                self.startLoad();
+              }
+            } else {
+              self.options.onLoadExit();
             }
-          }
-        });
+            return self;
+          };
+          LoadingTask.prototype.startLoad = function() {
+            self.options.onLoadStart();
+            self.$imagesToLoad.each(function(i) {
+              var image = this;
+              image.file = new Image();
+              console.log('waiting for file #' + i + ' to be loaded...');
+              $(image.file).on('load', function() {
+                console.log('loaded file #' + i + '.');
+                self.imagesLoaded.push(image);
+                self.injectFile(image);
+                $(image).addClass('loaded');
+                self.updatePercentLoaded();
+                var checkProgress = function() {
+                  if (self.percentLoaded == 100) {
+                    // console.log('loading complete!');
+                    self.exitLoad();
+                  }
+                };
+                if (self.options.onLoadNew !== null) {
+                  self.options.onLoadNew(self.percentLoaded, checkProgress);
+                } else {
+                  checkProgress();
+                }
+              });
+              console.log('loading file #' + i + '...');
+              self.startFileLoad(image);
+            });
+            return self;
+          };
+          LoadingTask.prototype.startFileLoad = function(image) {
+            console.log('starting load for: ' + image.file.src + '...');
+            image.file.src = $(image).attr('data-src');
+            return self;
+          };
+          // LoadingTask.prototype.abortFileLoad = function(image) {
+          //   console.log('stopping load for: ' + image.file.src + '.');
+          //   image.file.src = 'assets/img/transparent.png';
+          //   image.file.onerror = null;
+          //   image.file.remove();
+          //   return self;
+          // };
+          LoadingTask.prototype.injectFile = function(image) {
+            $(image).attr('src', image.file.src);
+            return self;
+          };
+          LoadingTask.prototype.updatePercentLoaded = function() {
+            self.percentLoaded = (self.imagesLoaded.length / self.$imagesToLoad.length * 100).toFixed();
+            console.log('loaded ' + self.percentLoaded + '%.');
+            return self;
+          };
+          // LoadingTask.prototype.abortLoad = function() {
+          //   console.log('stopping to load.');
+          //   self.$imagesToLoad.each(function() {
+          //     self.abortFileLoad(this);
+          //   });
+          //   self.options.onLoadAbort();
+          //   if (self.options.withLoader) {
+          //     TweenLite.killTweensOf(self.app.static.$loader.find('span > span'));
+          //   }
+          //   return self;
+          // };
+          LoadingTask.prototype.exitLoad = function(userOptions) {
+            console.log('exiting load.');
+            var doExit = function() {
+              self.options.onLoadExit();
+            };
+            if (self.options.beforeLoadExit !== null) {
+              self.options.beforeLoadExit(doExit);
+            } else {
+              doExit();
+            }
+            return self;
+          };
+        }
+      };
+
+      if (!self.loadingTasks) { /* sticked on dynamic */
+        self.loadingTasks = [];
       }
+      if (!a || typeof a === 'object') {
+        var loadingTask = new LoadingTask().initialize($elements, a);
+        self.loadingTasks.push(loadingTask);
+      // } else if (typeof a === 'string') {
+      //   if (a === 'abort') {
+      //     self.abortLoad();
+      //     self.exitLoad();
+      //     // + delete loading task!
+      //   }
+      }
+      return $elements;
+
+      // var $imagesToLoad = $elements.not('.loaded');
+      // var options = $.extend({
+      //   withLoader: false,
+      //   onStart: function() {},
+      //   onComplete: function() {}
+      // }, userOptions);
+      // var imagesLoaded, percentLoaded;
+      // var startLoad = function() {
+      //   options.onStart();
+      //   $imagesToLoad.each(function(i) {
+      //     var image = this;
+      //     image.file = new Image();
+      //     // console.log('waiting for file #' + i + ' to be loaded...');
+      //     $(image.file).on('load', function() {
+      //       // console.log('loaded file #' + i + '.');
+      //       imagesLoaded.push(image);
+      //       injectFile(image);
+      //       $(image).addClass('loaded');
+      //       updatePercentLoaded();
+      //       var checkProgress = function() {
+      //         if (percentLoaded == 100) {
+      //           // console.log('loading complete!');
+      //           exitLoad({
+      //             onComplete: function() {
+      //               self.$specificContent.waitForImages(function() {
+      //                 options.onComplete();
+      //               });
+      //             }
+      //           });
+      //         }
+      //       };
+      //       if (options.withLoader) {
+      //         self.app.static.$loader.makeLoader('update', {
+      //           percent: percentLoaded,
+      //           animation: true,
+      //           onComplete: function() {
+      //             checkProgress();
+      //           }
+      //         });
+      //       } else {
+      //         checkProgress();
+      //       }
+      //     });
+      //     // console.log('loading file #' + i + '...');
+      //     startFileLoad(image);
+      //   });
+      // };
+      // var startFileLoad = function(image) {
+      //   // console.log('starting load for: ' + image.file.src + '...');
+      //   image.file.src = $(image).attr('data-src');
+      // };
+      // var stopFileLoad = function(image) {
+      //   // console.log('stopping load for: ' + image.file.src + '.');
+      //   image.file.src = 'assets/img/transparent.png';
+      //   image.file.onerror = null;
+      //   image.file.remove();
+      // };
+      // var injectFile = function(image) {
+      //   $(image).attr('src', image.file.src);
+      // };
+      // var updatePercentLoaded = function() {
+      //   percentLoaded = (imagesLoaded.length / $imagesToLoad.length * 100).toFixed();
+      //   // console.log('loaded ' + percentLoaded + '%.');
+      // };
+      // var stopLoad = function() {
+      //   // console.log('stopping to load.');
+      //   $imagesToLoad.each(function() {
+      //     stopFileLoad(this);
+      //   });
+      //   if (options.withLoader) {
+      //     TweenLite.killTweensOf(self.app.static.$loader.find('span > span'));
+      //   }
+      // };
+      // var exitLoad = function(userOptions) {
+      //   // console.log('exiting load.');
+      //   var doExit = function() {
+      //     if (typeof userOptions !== 'undefined' && userOptions.hasOwnProperty('onComplete')) {
+      //       userOptions.onComplete.call();
+      //     }
+      //     if (options.withLoader) {
+      //       self.app.static.$loader.makeLoader('update', {
+      //         percent: 0,
+      //         animation: false
+      //       });
+      //     }
+      //   };
+      //   if (options.withLoader) {
+      //     self.app.static.$loader.toggleVisibility(false, self.app.timingUnit * 2, function() {
+      //       // console.log('$loader hidden.');
+      //       doExit();
+      //     });
+      //   } else {
+      //     doExit();
+      //   }
+      // };
+      // if (action === 'start') {
+      //   // console.log('starting load.');
+      //   // console.log('$imagesToLoad count: ' + $imagesToLoad.length);
+      //   if ($imagesToLoad.length !== 0) {
+      //     imagesLoaded = [];
+      //     percentLoaded = 0;
+      //     if (options.withLoader) {
+      //       self.app.static.$loader.toggleVisibility(true, self.app.timingUnit * 2, function() {
+      //         // console.log('$loader visible.');
+      //         startLoad();
+      //       });
+      //     } else {
+      //       startLoad();
+      //     }
+      //   } else {
+      //     options.onComplete();
+      //   }
+      // } else if (action === 'stop') {
+      //   stopLoad();
+      //   exitLoad({
+      //     onComplete: function() {
+      //       options.onComplete();
+      //     }
+      //   });
+      // }
     };
     Dynamic.prototype.getMscrollPath = function($element) {
       var nthChild = $element.index() + 1; /* to be overridden */
@@ -244,7 +415,8 @@ var Dynamic = function() {
     Dynamic.prototype.getMscrollClones = function($element) {
       var $mscrollGroup = $element.parents('.mscroll-group');
       var path = self.getMscrollPath($element);
-      return $mscrollGroup.siblings().find(path);
+      var $clones = $mscrollGroup.siblings().find(path);
+      return $clones;
     };
     Dynamic.prototype.syncMscrollEvent = function(type, $elements, method) {
       $elements.on(type, $.debounce(300, function() {
@@ -401,10 +573,8 @@ var Static = function() {
           // return parseFloat($listItem.find('p').css('line-height')) + parseFloat($listItem.find('p').css('padding-top')) + parseFloat($listItem.find('p').css('padding-bottom'));
         },
         onChange: function(element, callback) {
-          if (self.app.dynamic.isLoading) {
-            self.app.dynamic.loadImages(self.app.dynamic.$imagesPreLoad, 'stop', function() {
-              self.app.dynamic.hideOld(callback);
-            });
+          if (self.app.dynamic.isPreLoading) {
+            // self.app.dynamic.loadImages(self.app.dynamic.$imagesPreLoad, 'abort');
           } else {
             self.app.dynamic.hideOld(callback);
           }
@@ -450,7 +620,7 @@ var App = function() {
     App.prototype.docReady = false;
     App.prototype.winLoaded = false;
     App.prototype.isIos = false;
-    App.prototype.timingUnit = 0.15 * 1;
+    App.prototype.timingUnit = 0.15 * 2;
     App.prototype.windowRef = {
       minHeight: 320,
       maxHeight: 900,
@@ -510,8 +680,42 @@ var App = function() {
       self.measureWindow();
       self.resizeVgrid();
       self.static.initialize(self).resize().render();
-      self.dynamic.initialize(self).loadImages(self.dynamic.$imagesPreLoad, 'start', function() {
-        self.dynamic.resize().render();
+      self.dynamic.initialize(self).loadImages(self.dynamic.$imagesPreLoad, {
+        beforeLoadStart: function(callback) {
+          self.static.$loader.toggleVisibility(true, self.timingUnit * 2, function() { /* "before starting" */
+            console.log('$loader visible.');
+            callback();
+          });
+        },
+        onLoadStart: function() {
+          self.dynamic.isPreLoading = true;
+        },
+        onLoadNew: function(percentLoaded, callback) {
+          self.static.$loader.makeLoader('update', {
+            percent: percentLoaded, /* where do i get it?! */
+            animation: true,
+            onComplete: function() {
+              callback();
+            }
+          });
+        },
+        beforeLoadExit: function(callback) {
+          self.static.$loader.toggleVisibility(false, self.timingUnit * 2, function() {
+            console.log('$loader hidden.');
+            self.static.$loader.makeLoader('update', {
+              percent: 0,
+              animation: false
+            });
+            callback();
+          });
+        },
+        onLoadExit: function() {
+          self.dynamic.isPreLoading = false;
+          self.dynamic.resize().render();
+        },
+        // onLoadAbort: function() {
+        //   self.app.dynamic.hideOld(callback);
+        // } /* not operational */
       });
       objectFitImages();
     };
