@@ -38,23 +38,35 @@ var Dynamic = function() {
       self.$imageGroups.makeSlider({
         timing: self.app.timingUnit
       });
+      self.$mscrollItems.viewportCheck({
+        $toBind: self.$mscrollContainer,
+        $viewport: self.app.$viewport,
+        onInViewport: function($element) {
+          self.loadImages($element.find('img')); /* flag: deal with the clones.. */
+        },
+        // onOutViewport: function() {
+        //   if (thisTaskTracker.loadingTask) {
+        //     thisTaskTracker.loadingTask.abortLoad();
+        //   }
+        // }
+      });
       self.$mscrollItems.each(function() {
         var $thisMscrollItem = $(this);
-        var thisTaskTracker = {};
-        $thisMscrollItem.viewportCheck({
-          $toBind: self.$mscrollContainer,
-          $viewport: self.app.$viewport,
-          onIn: function() {
-            self.loadImages($thisMscrollItem.find('img'), {
-              taskTracker: thisTaskTracker
-            }); /* flag: deal with the clones.. */
-          },
-          onOut: function() {
-            if (thisTaskTracker.loadingTask) {
-              thisTaskTracker.loadingTask.abortLoad();
-            }
-          }
-        });
+        // var thisTaskTracker = {};
+        // $thisMscrollItem.viewportCheck({
+        //   $toBind: self.$mscrollContainer,
+        //   $viewport: self.app.$viewport,
+        //   // onInViewport: function() {
+        //   //   self.loadImages($thisMscrollItem.find('img'), {
+        //   //     taskTracker: thisTaskTracker
+        //   //   }); /* flag: deal with the clones.. */
+        //   // },
+        //   // onOutViewport: function() {
+        //   //   if (thisTaskTracker.loadingTask) {
+        //   //     thisTaskTracker.loadingTask.abortLoad();
+        //   //   }
+        //   // }
+        // });
         var $thisFigCaption = $thisMscrollItem.find('figcaption a').html(function(){
       		var text = $(this).text().split(' ');
       		var last = text.pop();
@@ -72,7 +84,7 @@ var Dynamic = function() {
             $toggled.clickCheck({
               $toBind: self.$document,
               toIgnore: [$toggler, self.getMscrollClones($toggler)],
-              onOut: function(event) {
+              onClickOut: function(event) {
                 if (self.getMscrollClones($toggled).get().indexOf(event.target) === -1) { /* flag: eventTarget doesn't take the children in account! */
                   $toggler.makeToggler('toggle');
                 }
@@ -80,7 +92,7 @@ var Dynamic = function() {
             })/*.viewportCheck({
               $toBind: self.$mscrollContainer,
               $viewport: self.app.$viewport,
-              onOut: function() {
+              onOutViewport: function() {
                 if (!self.getMscrollClones($toggled).isInViewport({ viewport: self.app.$viewport }).length) {
                   $toggler.makeToggler('toggle');
                 }
@@ -276,12 +288,10 @@ var Dynamic = function() {
         }
         return self;
       };
-      if (!a || typeof a === 'object') {
-        if (a.taskTracker) {
-          a.taskTracker.loadingTask = new LoadingTask().initialize($elements, a);
-        } else {
-          var loadingTask = new LoadingTask().initialize($elements, a);
-        }
+      if (typeof a === 'object' && a.hasOwnProperty('taskTracker')) {
+        a.taskTracker.loadingTask = new LoadingTask().initialize($elements, a);
+      } else {
+        var loadingTask = new LoadingTask().initialize($elements, a);
       }
       return $elements;
     };
@@ -654,14 +664,14 @@ $.fn.viewportCheck = function(a) {
     if (!self.wasInstantiated) {
       self.wasInstantiated = true;
       ViewportChecker.prototype.doCheck = function() {
-        if ($(self.element).isInViewport({
+        if (self.$element.isInViewport({
             viewport: self.options.$viewport
           }).length) {
           // console.log('"' + self.element.classList[0] + '" (' + $(self.element).closest('.mscroll-group')[0].classList + ') is inside of viewport.');
-          self.options.onIn();
+          self.options.onInViewport(self.$element);
         } else {
           // console.log('"' + self.element.classList[0] + '" (' + $(self.element).closest('.mscroll-group')[0].classList + ') is outside of viewport.');
-          self.options.onOut();
+          self.options.onOutViewport(self.$element);
         }
         return self;
       };
@@ -684,12 +694,13 @@ $.fn.viewportCheck = function(a) {
       ViewportChecker.prototype.initialize = function(element, userOptions) {
         var self = this;
         self.element = element;
+        self.$element = $(self.element);
         self.options = $.extend({
           $toBind: $(document),
           $viewport: $(window),
           debounce: true,
-          onIn: function() {},
-          onOut: function() {}
+          onInViewport: function() {},
+          onOutViewport: function() {}
         }, userOptions);
         return self;
       };
@@ -735,10 +746,10 @@ $.fn.clickCheck = function(a) {
         if (!isAnySame && !isAnyDescendant) {
           if (self.element.isSameNode(event.target) || self.element.contains(event.target)) {
             // console.log('"' + self.element.classList[0] + '" is clicked in.');
-            self.options.onIn(event);
+            self.options.onClickIn(event);
           } else {
             // console.log('"' + self.element.classList[0] + '" is clicked out.');
-            self.options.onOut(event);
+            self.options.onClickOut(event);
           }
         }
       };
@@ -773,8 +784,8 @@ $.fn.clickCheck = function(a) {
         self.options = $.extend({
           $toBind: $(document),
           toIgnore: [],
-          onIn: function(event) {},
-          onOut: function(event) {}
+          onClickIn: function(event) {},
+          onClickOut: function(event) {}
         }, userOptions);
         self.formatToIgnore();
         return self;
@@ -985,7 +996,7 @@ $.fn.makeDropdown = function(a) {
         if (!self.isOpen) {
           self.$list.clickCheck({
             $toBind: self.options.$document,
-            onOut: function(event) {
+            onClickOut: function(event) {
               self.toggle();
             }
           });
