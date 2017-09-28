@@ -19,5 +19,4 @@ exclude: ["_assets",
           "gulpfile.js",
           "node_modules",
           "package.json",
-          "_DS_Store",
-          "assets"]
+          "_DS_Store"]
