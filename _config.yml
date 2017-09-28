@@ -20,4 +20,4 @@ exclude: ["_assets",
           "node_modules",
           "package.json",
           "_DS_Store",
-          "assets]
+          "assets"]
