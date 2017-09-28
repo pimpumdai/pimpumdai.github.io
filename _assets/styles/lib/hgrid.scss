@@ -1,5 +1,5 @@
 $hgrid-count: 16;
-$hgrid-gutter: vgrid-line(1)/* * $vgrid-void + $vgrid-padding*//* * 1.61803398875*/;
+$hgrid-gutter: (vgrid-line(1) + $vgrid-padding) * 1.61803398875;
 $hgrid-gutter-rounding-factor: 40; /* to prevent/counterbalance 1px inconsistencies */
 $hgrid-gutter-floored: floor($hgrid-gutter * $hgrid-gutter-rounding-factor) / $hgrid-gutter-rounding-factor;
 $hgrid-gutter-ceiled: ceil($hgrid-gutter * $hgrid-gutter-rounding-factor) / $hgrid-gutter-rounding-factor;
