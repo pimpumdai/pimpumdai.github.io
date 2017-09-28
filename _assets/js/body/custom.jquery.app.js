@@ -42,31 +42,11 @@ var Dynamic = function() {
         $toBind: self.$mscrollContainer,
         $viewport: self.app.$viewport,
         onInViewport: function($element) {
-          self.loadImages($element.find('img')); /* flag: deal with the clones.. */
-        },
-        // onOutViewport: function() {
-        //   if (thisTaskTracker.loadingTask) {
-        //     thisTaskTracker.loadingTask.abortLoad();
-        //   }
-        // }
+          self.loadImages($element.find('img')); /* flag: unbind on complete + abort on out + deal with the clones */
+        }
       });
       self.$mscrollItems.each(function() {
         var $thisMscrollItem = $(this);
-        // var thisTaskTracker = {};
-        // $thisMscrollItem.viewportCheck({
-        //   $toBind: self.$mscrollContainer,
-        //   $viewport: self.app.$viewport,
-        //   // onInViewport: function() {
-        //   //   self.loadImages($thisMscrollItem.find('img'), {
-        //   //     taskTracker: thisTaskTracker
-        //   //   }); /* flag: deal with the clones.. */
-        //   // },
-        //   // onOutViewport: function() {
-        //   //   if (thisTaskTracker.loadingTask) {
-        //   //     thisTaskTracker.loadingTask.abortLoad();
-        //   //   }
-        //   // }
-        // });
         var $thisFigCaption = $thisMscrollItem.find('figcaption a').html(function(){
       		var text = $(this).text().split(' ');
       		var last = text.pop();
