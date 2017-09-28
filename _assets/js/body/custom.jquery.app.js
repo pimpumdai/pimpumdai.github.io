@@ -502,7 +502,7 @@ var App = function() {
     App.prototype.docReady = false;
     App.prototype.winLoaded = false;
     App.prototype.isIos = false;
-    App.prototype.timingUnit = 0.5;
+    App.prototype.timingUnit = 0.15;
     App.prototype.windowRef = {
       minHeight: 320,
       maxHeight: 900,
