@@ -460,8 +460,8 @@ var Static = function() {
             history.pushState(null, null, $element.attr('data-href'));
           }
         },
-        afterChange: function(element) {
-          self.app.dynamic.loadNew($(element).attr('data-href'));
+        afterChange: function($element) {
+          self.app.dynamic.loadNew($element.attr('data-href'));
         }
       });
       if (Modernizr.history) {
