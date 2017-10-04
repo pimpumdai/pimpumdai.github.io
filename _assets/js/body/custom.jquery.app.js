@@ -1,3 +1,24 @@
+function preloadImages(array) {
+  // console.log('preloading ' + array);
+  if (!preloadImages.list) {
+      preloadImages.list = [];
+  }
+  var list = preloadImages.list;
+  for (var i = 0; i < array.length; i++) {
+    var img = new Image();
+    img.onload = function() {
+      var index = list.indexOf(this);
+      if (index !== -1) {
+          // remove image from the array once it's loaded
+          // for memory consumption reasons
+          list.splice(index, 1);
+      }
+    };
+    list.push(img);
+    img.src = array[i];
+  }
+}
+
 var Dynamic = function() {
   var self = this;
   if (!self.wasInstantiated) {
@@ -15,7 +36,7 @@ var Dynamic = function() {
       self.$mscrollItems = self.$mscrollGroups.find('.mscroll-item');
       self.$imageGroups = self.$specificContent.find('.image-group');
       self.$images = self.$specificContent.find('img');
-      self.$imagesPreLoad = (function(){
+      self.$imagesPreLoadA = (function(){
         var set = [];
         self.$images.filter('.critical').each(function() {
           if ($(this).index() === 0) {
@@ -27,6 +48,20 @@ var Dynamic = function() {
         //     set.push(this);
         //   }
         // });
+        return $(set);
+      })();
+      self.$imagesPreLoadB = (function(){
+        var set = [];
+        // self.$images.filter('.critical').each(function() {
+        //   if ($(this).index() === 0) {
+        //     set.push(this);
+        //   }
+        // });
+        self.$images.each(function() {
+          if ($(this).index() === 0) {
+            set.push(this);
+          }
+        });
         return $(set);
       })();
       self.$figures = self.$mscrollItems.find('figure');
@@ -106,6 +141,28 @@ var Dynamic = function() {
       // console.log('showing dynamic content...');
       self.$specificContent.toggleVisibility(true, self.app.timingUnit * 4, function() {
         // console.log('dynamic content visible.');
+        // FLAG
+        // switch (self.app.current_url) {
+        //   case '/':
+            preloadImages([
+              "assets/img/1606_440hz_5grb3_medium.png",
+              "assets/img/1508_musica-universalis_jvuqx_medium.png",
+              "assets/img/1410_mftuw_xqo7g_medium.png",
+              "assets/img/1406_nse_ujakz_medium.png",
+              "assets/img/1403_a-distant-view_mhc9p_medium.png",
+              "assets/img/1403_pom_zodjz_medium.png",
+              "assets/img/1209_lightmaps-practice_bsxx7_medium.png",
+              "assets/img/1209_lightmaps-theory_vijtw_medium.png",
+              "assets/img/1204_se-souvenir_qs2ln_medium.png",
+              "assets/img/1112_xrygzb_yvy5l_medium.png",
+              "assets/img/1111_amen_xsaml_medium.png",
+              "assets/img/1110_strainline_lejtn_medium.png",
+              "assets/img/1102_s550_q4uh3_medium.png"
+            ]);
+            self.loadImages(self.$imagesPreLoadB);
+        //     break;
+        //   default:
+        // }
       });
       return self;
     };
@@ -124,7 +181,7 @@ var Dynamic = function() {
         self.app.currentUrl = url;
         self.initialize();
         // console.log('starting preload');
-        self.loadImages(self.$imagesPreLoad, {
+        self.loadImages(self.$imagesPreLoadA, {
           taskTracker: self.app.PreLoadTaskTracker,
           onLoadEnter: function(callback) {
             self.app.static.$loader.toggleVisibility(true, self.app.timingUnit * 2, function() {
@@ -561,7 +618,7 @@ var App = function() {
       self.static.initialize(self).resize().render();
       self.PreLoadTaskTracker = {};
       // console.log('starting preload');
-      self.dynamic.initialize(self).loadImages(self.dynamic.$imagesPreLoad, {
+      self.dynamic.initialize(self).loadImages(self.dynamic.$imagesPreLoadA, {
         taskTracker: self.PreLoadTaskTracker,
         onLoadEnter: function(callback) {
           self.static.$loader.toggleVisibility(true, self.timingUnit * 2, function() { /* "before starting" */
