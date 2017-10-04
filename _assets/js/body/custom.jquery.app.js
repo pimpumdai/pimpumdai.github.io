@@ -159,7 +159,7 @@ var Dynamic = function() {
               "assets/img/1110_strainline_lejtn_medium.png",
               "assets/img/1102_s550_q4uh3_medium.png"
             ]);
-            self.loadImages(self.$imagesPreLoadB);
+            // self.loadImages(self.$imagesPreLoadB);
         //     break;
         //   default:
         // }
