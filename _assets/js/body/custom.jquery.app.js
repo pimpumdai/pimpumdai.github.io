@@ -144,21 +144,21 @@ var Dynamic = function() {
         // FLAG
         // switch (self.app.current_url) {
         //   case '/':
-            preloadImages([
-              "assets/img/1606_440hz_5grb3_medium.png",
-              "assets/img/1508_musica-universalis_jvuqx_medium.png",
-              "assets/img/1410_mftuw_xqo7g_medium.png",
-              "assets/img/1406_nse_ujakz_medium.png",
-              "assets/img/1403_a-distant-view_mhc9p_medium.png",
-              "assets/img/1403_pom_zodjz_medium.png",
-              "assets/img/1209_lightmaps-practice_bsxx7_medium.png",
-              "assets/img/1209_lightmaps-theory_vijtw_medium.png",
-              "assets/img/1204_se-souvenir_qs2ln_medium.png",
-              "assets/img/1112_xrygzb_yvy5l_medium.png",
-              "assets/img/1111_amen_xsaml_medium.png",
-              "assets/img/1110_strainline_lejtn_medium.png",
-              "assets/img/1102_s550_q4uh3_medium.png"
-            ]);
+            // preloadImages([
+            //   "assets/img/1606_440hz_5grb3_medium.png",
+            //   "assets/img/1508_musica-universalis_jvuqx_medium.png",
+            //   "assets/img/1410_mftuw_xqo7g_medium.png",
+            //   "assets/img/1406_nse_ujakz_medium.png",
+            //   "assets/img/1403_a-distant-view_mhc9p_medium.png",
+            //   "assets/img/1403_pom_zodjz_medium.png",
+            //   "assets/img/1209_lightmaps-practice_bsxx7_medium.png",
+            //   "assets/img/1209_lightmaps-theory_vijtw_medium.png",
+            //   "assets/img/1204_se-souvenir_qs2ln_medium.png",
+            //   "assets/img/1112_xrygzb_yvy5l_medium.png",
+            //   "assets/img/1111_amen_xsaml_medium.png",
+            //   "assets/img/1110_strainline_lejtn_medium.png",
+            //   "assets/img/1102_s550_q4uh3_medium.png"
+            // ]);
             // self.loadImages(self.$imagesPreLoadB);
         //     break;
         //   default:
