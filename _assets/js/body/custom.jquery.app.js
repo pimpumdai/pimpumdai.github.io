@@ -41,7 +41,7 @@ var Dynamic = function() {
       // console.log('starting viewport load');
       self.$mscrollItems.viewportCheck({
         $toBind: self.$mscrollContainer,
-        $viewport: self.app.$viewport,
+        $viewport: self.app.$window,
         onInViewport: function($element) {
           self.loadImages($element.find('img')); /* flag: unbind on complete + abort on out + deal with the clones */
         }

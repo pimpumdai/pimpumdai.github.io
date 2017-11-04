@@ -87,7 +87,8 @@ html {
 img {
   @include object-fit(cover);
   object-fit: cover;
-  background: hsl(210, 0%, 15%);
+  // background: hsl(210, 0%, 15%);
+  background: invert($c-background);
 }
 
 img.cover {
@@ -208,7 +209,7 @@ img.cover {
 .mscroll-container { /* the one of which we scroll the overflow */
   @include fill-fixed;
   @include hardware-acceleration;
-  background: transparentize($c-background, 1/3);
+  // background: transparentize(invert($c-background), 1/3);
   -webkit-backface-visibility: hidden;
   -webkit-overflow-scrolling: touch;
   .mscroll-area { /* the one that holds the overflowing content */
@@ -354,7 +355,7 @@ img.cover {
       height: 100%;
       width: 100%;
       // @include hgrid-collapse();
-      background: transparentize($c-background, 1/3);
+      background: transparentize(invert($c-background), 1/3);
       z-index: 1;
       article {
         @media screen and (max-width: $breakpoint-1 - 1) { /* override */
