@@ -1,23 +1,23 @@
-function preloadImages(array) {
-  // console.log('preloading ' + array);
-  if (!preloadImages.list) {
-      preloadImages.list = [];
-  }
-  var list = preloadImages.list;
-  for (var i = 0; i < array.length; i++) {
-    var img = new Image();
-    img.onload = function() {
-      var index = list.indexOf(this);
-      if (index !== -1) {
-          // remove image from the array once it's loaded
-          // for memory consumption reasons
-          list.splice(index, 1);
-      }
-    };
-    list.push(img);
-    img.src = array[i];
-  }
-}
+// function preloadImages(array) {
+//   // console.log('preloading ' + array);
+//   if (!preloadImages.list) {
+//       preloadImages.list = [];
+//   }
+//   var list = preloadImages.list;
+//   for (var i = 0; i < array.length; i++) {
+//     var img = new Image();
+//     img.onload = function() {
+//       var index = list.indexOf(this);
+//       if (index !== -1) {
+//           // remove image from the array once it's loaded
+//           // for memory consumption reasons
+//           list.splice(index, 1);
+//       }
+//     };
+//     list.push(img);
+//     img.src = array[i];
+//   }
+// }
 
 var Dynamic = function() {
   var self = this;
@@ -36,21 +36,21 @@ var Dynamic = function() {
       self.$mscrollItems = self.$mscrollGroups.find('.mscroll-item');
       self.$imageGroups = self.$specificContent.find('.image-group');
       self.$images = self.$specificContent.find('img');
-      self.$imagesPreLoadA = (function(){
-        var set = [];
-        self.$images.filter('.critical').each(function() {
-          if ($(this).index() === 0) {
-            set.push(this);
-          }
-        });
-        // self.$images.each(function() {
-        //   if ($(this).index() === 0) {
-        //     set.push(this);
-        //   }
-        // });
-        return $(set);
-      })();
-      self.$imagesPreLoadB = (function(){
+      // self.$imagesPreLoadA = (function(){
+      //   var set = [];
+      //   self.$images.filter('.critical').each(function() {
+      //     if ($(this).index() === 0) {
+      //       set.push(this);
+      //     }
+      //   });
+      //   // self.$images.each(function() {
+      //   //   if ($(this).index() === 0) {
+      //   //     set.push(this);
+      //   //   }
+      //   // });
+      //   return $(set);
+      // })();
+      self.$imagesPreLoad = (function(){
         var set = [];
         // self.$images.filter('.critical').each(function() {
         //   if ($(this).index() === 0) {
@@ -181,7 +181,7 @@ var Dynamic = function() {
         self.app.currentUrl = url;
         self.initialize();
         // console.log('starting preload');
-        self.loadImages(self.$imagesPreLoadA, {
+        self.loadImages(self.$imagesPreLoad, {
           taskTracker: self.app.PreLoadTaskTracker,
           onLoadEnter: function(callback) {
             self.app.static.$loader.toggleVisibility(true, self.app.timingUnit * 2, function() {
@@ -618,7 +618,7 @@ var App = function() {
       self.static.initialize(self).resize().render();
       self.PreLoadTaskTracker = {};
       // console.log('starting preload');
-      self.dynamic.initialize(self).loadImages(self.dynamic.$imagesPreLoadA, {
+      self.dynamic.initialize(self).loadImages(self.dynamic.$imagesPreLoad, {
         taskTracker: self.PreLoadTaskTracker,
         onLoadEnter: function(callback) {
           self.static.$loader.toggleVisibility(true, self.timingUnit * 2, function() { /* "before starting" */
