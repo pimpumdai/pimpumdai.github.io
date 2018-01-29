@@ -1,11 +1,10 @@
 # Site settings
-# url: "https://adrienbihorel.net" # the base hostname & protocol for your site
-url: "https://adrienbihorel.github.io" # the base hostname & protocol for your site
-baseurl: ""                            # the subpath of your site, e.g. /blog
-title: Adrien Bihorel
-email: adrienbihorel@gmail.com
-description: Adrien Bihorel's website
-github_username: adrienbihorel
+baseurl: "pimpumdai.github.io" # the subpath of your site, e.g. /blog
+url: "" # the base hostname & protocol for your site
+title: Pim Pum Dai
+email: fra-artist@hotmail.it
+description: Pim Pum Dai's website
+github_username: pimpumdai
 
 # Build settings
 markdown: kramdown

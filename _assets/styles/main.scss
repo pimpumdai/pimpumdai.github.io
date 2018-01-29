@@ -59,7 +59,7 @@ html {
     // @include show-vgrid($c-accent);
 		font-family: map-get($vgrid-font, name), serif;
 		font-weight: 800;
-    font-style: italic;
+    // font-style: italic;
 		color: $c-font;
     stroke: $c-font;
 		text-rendering: geometricPrecision;
@@ -340,6 +340,8 @@ img.cover {
       position: absolute;
       margin-top: - vgrid-line(1);
       z-index: 2;
+      // mix-blend-mode: difference;
+      // opacity: 0.33;
       h1 {
         height: 0; /* flag: leaves height of plumber padding */
         a {

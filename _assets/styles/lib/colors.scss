@@ -1,6 +1,7 @@
-$c-font: hsl(0, 90%, 66.67%);
-// $c-font: hsl(0, 0%, 100%);
-$c-background: hsl(0, 0%, 88.89%);
-// $c-background: hsl(0, 0%, 25%);
+// $c-font: hsl(0, 90%, 66.67%);
+// $c-font: hsl(200, 80%, 66.67%);
+$c-font: hsl(0, 0%, 100%);
+// $c-background: hsl(0, 0%, 88.89%);
+$c-background: hsl(43, 20, 92.5%);
 // $c-background: hsl(0, 0%, 0%);
 $c-accent: adjust-hue($c-font, 210);
